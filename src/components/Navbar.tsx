@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Github, Menu, X, Code, FileText, Wrench } from 'lucide-react';
+import { Github, Menu, X, Code, FileText, Wrench, UserCircle2 } from 'lucide-react';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -88,16 +88,17 @@ const Navbar = () => {
 
           {/* Action Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <a 
-              href="https://github.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
+            <Link 
+              to="/dashboard" 
               className="flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors duration-300"
             >
-              <Github size={18} />
-              <span>GitHub</span>
-            </a>
-            <button className="btn btn-primary flex items-center gap-2">
+              <UserCircle2 size={18} />
+              <span>Dashboard</span>
+            </Link>
+            <Link 
+              to="/auth" 
+              className="btn btn-primary flex items-center gap-2"
+            >
               <span>Get Started</span>
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
@@ -114,7 +115,7 @@ const Navbar = () => {
                 <path d="M5 12h14"></path>
                 <path d="m12 5 7 7-7 7"></path>
               </svg>
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -155,16 +156,17 @@ const Navbar = () => {
             ))}
             
             <div className="pt-2 mt-2 border-t border-white/10 flex flex-col gap-3">
-              <a 
-                href="https://github.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
+              <Link 
+                to="/dashboard" 
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-foreground/80 hover:text-foreground hover:bg-white/5 transition-all duration-300"
               >
-                <Github size={18} />
-                <span>GitHub</span>
-              </a>
-              <button className="btn btn-primary flex items-center justify-center gap-2">
+                <UserCircle2 size={18} />
+                <span>Dashboard</span>
+              </Link>
+              <Link 
+                to="/auth" 
+                className="btn btn-primary flex items-center justify-center gap-2"
+              >
                 <span>Get Started</span>
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
@@ -180,7 +182,7 @@ const Navbar = () => {
                   <path d="M5 12h14"></path>
                   <path d="m12 5 7 7-7 7"></path>
                 </svg>
-              </button>
+              </Link>
             </div>
           </div>
         </motion.div>
