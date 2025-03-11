@@ -7,6 +7,34 @@ import ToolCard from '../components/ToolCard';
 import CommandLine from '../components/CommandLine';
 
 const Tools = () => {
+  // Define tools data according to the ToolCard component's expected props
+  const tools = [
+    {
+      id: 1,
+      name: "README Generator",
+      description: "Create professional README files for your projects with our interactive generator.",
+      icon: <FileText size={24} className="text-neon-blue" />,
+      link: "/tools/readme-generator",
+      gradient: "linear-gradient(135deg, rgba(0,112,243,0.5), rgba(0,112,243,0))"
+    },
+    {
+      id: 2,
+      name: "License Selector",
+      description: "Choose the right open source license for your project with our comparison tool.",
+      icon: <Award size={24} className="text-neon-purple" />,
+      link: "/tools/license-selector",
+      gradient: "linear-gradient(135deg, rgba(170,0,255,0.5), rgba(170,0,255,0))"
+    },
+    {
+      id: 3,
+      name: "Git Learning Hub",
+      description: "Learn Git commands with interactive challenges and visual explanations.",
+      icon: <GitBranch size={24} className="text-neon-blue" />,
+      link: "/tools/git-learning-hub",
+      gradient: "linear-gradient(135deg, rgba(0,112,243,0.5), rgba(0,112,243,0))"
+    }
+  ];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -53,27 +81,9 @@ const Tools = () => {
           </motion.div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            <ToolCard
-              icon={<FileText size={24} className="text-neon-blue" />}
-              title="README Generator"
-              description="Create professional README files for your projects with our interactive generator."
-              link="/tools/readme-generator"
-              badge="Popular"
-            />
-            <ToolCard
-              icon={<Award size={24} className="text-neon-purple" />}
-              title="License Selector"
-              description="Choose the right open source license for your project with our comparison tool."
-              link="/tools/license-selector"
-              badge="Essential"
-            />
-            <ToolCard
-              icon={<GitBranch size={24} className="text-neon-blue" />}
-              title="Git Learning Hub"
-              description="Learn Git commands with interactive challenges and visual explanations."
-              link="/tools/git-learning-hub"
-              badge="New"
-            />
+            {tools.map((tool, index) => (
+              <ToolCard key={tool.id} tool={tool} index={index} />
+            ))}
           </div>
           
           <div className="glass-card p-6 text-center">

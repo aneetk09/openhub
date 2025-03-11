@@ -7,7 +7,7 @@ interface CommandLineProps {
   title?: string;
   commands?: string[];
   initialCommand?: string;
-  onCommandEnter?: (command: string) => void;
+  onCommandEnter?: (command: string) => void | string;
   className?: string;
 }
 
@@ -30,7 +30,8 @@ const CommandLine: React.FC<CommandLineProps> = ({
     
     if (onCommandEnter) {
       const output = onCommandEnter(command);
-      if (output) {
+      // Check if output exists and is a string before adding to history
+      if (output && typeof output === 'string') {
         setHistory(prev => [...prev, output]);
       }
     }
