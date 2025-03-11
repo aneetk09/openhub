@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Github, Menu, X, Code, FileText, Tool } from 'lucide-react';
+import { Github, Menu, X, Code, FileText, Wrench } from 'lucide-react';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -25,7 +25,7 @@ const Navbar = () => {
 
   const navItems = [
     { name: 'Projects', path: '/projects', icon: <Code size={18} /> },
-    { name: 'Tools', path: '/tools', icon: <Tool size={18} /> },
+    { name: 'Tools', path: '/tools', icon: <Wrench size={18} /> },
     { name: 'Docs', path: '/docs', icon: <FileText size={18} /> },
   ];
 
