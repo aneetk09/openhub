@@ -3,26 +3,30 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Github, ArrowRight } from 'lucide-react';
-import { toast } from '../hooks/use-toast';
+import { useAuth } from '../contexts/AuthContext';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const { login, signup, isLoading } = useAuth();
   const navigate = useNavigate();
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     
-    // Simulate authentication
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: isLogin ? "Logged in successfully" : "Account created successfully",
-        description: "Welcome to OpenSource Explorer!",
-      });
-      navigate('/dashboard');
-    }, 1500);
+    if (isLogin) {
+      await login(email, password);
+    } else {
+      await signup(username, email, password);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setEmail('demo@example.com');
+    setPassword('password');
+    await login('demo@example.com', 'password');
   };
   
   return (
@@ -65,6 +69,8 @@ const Auth = () => {
                       className="bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 w-full 
                               focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary
                               transition-colors"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
                       required
                     />
                   </div>
@@ -83,6 +89,8 @@ const Auth = () => {
                     className="bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 w-full 
                              focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary
                              transition-colors"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
@@ -100,6 +108,8 @@ const Auth = () => {
                     className="bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 w-full 
                              focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary
                              transition-colors"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
@@ -128,6 +138,16 @@ const Auth = () => {
                   <ArrowRight size={16} className="ml-1 transform transition-transform duration-300 group-hover:translate-x-1" />
                 )}
               </button>
+
+              {isLogin && (
+                <button 
+                  type="button"
+                  onClick={handleDemoLogin}
+                  className="btn btn-ghost w-full flex items-center justify-center gap-2 text-primary"
+                >
+                  Try with demo account
+                </button>
+              )}
               
               <div className="relative flex items-center justify-center my-4">
                 <div className="border-t border-white/10 absolute w-full"></div>

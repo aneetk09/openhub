@@ -1,19 +1,21 @@
 
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { Github, GitBranch, Star, GitPullRequest, FileCode, BookOpen, Award } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard = () => {
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  if (!user) return null; // This shouldn't happen due to ProtectedRoute
   
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow pt-24 px-6">
-        <DashboardHero />
-        <UserStats />
+        <DashboardHero user={user} />
+        <UserStats stats={user.stats} />
         <LearningProgress />
         <RecentActivity />
       </main>
@@ -22,7 +24,9 @@ const Dashboard = () => {
   );
 };
 
-const DashboardHero = () => {
+const DashboardHero = ({ user }: { user: any }) => {
+  const initials = user.username.slice(0, 2).toUpperCase();
+  
   return (
     <section className="py-12">
       <div className="container mx-auto">
@@ -34,7 +38,7 @@ const DashboardHero = () => {
             className="bg-white/5 border border-white/10 rounded-full p-2"
           >
             <div className="w-20 h-20 md:w-32 md:h-32 bg-gradient-blue-purple rounded-full flex items-center justify-center text-2xl md:text-4xl font-bold">
-              JD
+              {initials}
             </div>
           </motion.div>
           
@@ -45,7 +49,7 @@ const DashboardHero = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-2xl md:text-3xl font-bold"
             >
-              Welcome back, <span className="bg-gradient-blue-purple bg-clip-text text-transparent">John Doe</span>
+              Welcome back, <span className="bg-gradient-blue-purple bg-clip-text text-transparent">{user.username}</span>
             </motion.h1>
             
             <motion.p
@@ -65,17 +69,17 @@ const DashboardHero = () => {
             >
               <div className="glass-card px-3 py-1 text-sm flex items-center gap-1">
                 <Github size={14} className="text-neon-blue" />
-                <span>johnDoe</span>
+                <span>{user.username}</span>
               </div>
               
               <div className="glass-card px-3 py-1 text-sm flex items-center gap-1">
                 <Star size={14} className="text-neon-purple" />
-                <span>25 stars earned</span>
+                <span>{user.stats.stars} stars earned</span>
               </div>
               
               <div className="glass-card px-3 py-1 text-sm flex items-center gap-1">
                 <GitPullRequest size={14} className="text-neon-blue" />
-                <span>12 PRs merged</span>
+                <span>{user.stats.pullRequests} PRs merged</span>
               </div>
             </motion.div>
           </div>
@@ -85,12 +89,12 @@ const DashboardHero = () => {
   );
 };
 
-const UserStats = () => {
-  const stats = [
-    { title: 'Repositories', value: 8, icon: <Github size={24} className="text-neon-blue" /> },
-    { title: 'Pull Requests', value: 15, icon: <GitPullRequest size={24} className="text-neon-purple" /> },
-    { title: 'Contributions', value: 247, icon: <GitBranch size={24} className="text-neon-blue" /> },
-    { title: 'Stars Earned', value: 25, icon: <Star size={24} className="text-neon-purple" /> },
+const UserStats = ({ stats }: { stats: any }) => {
+  const userStats = [
+    { title: 'Repositories', value: stats.repos, icon: <Github size={24} className="text-neon-blue" /> },
+    { title: 'Pull Requests', value: stats.pullRequests, icon: <GitPullRequest size={24} className="text-neon-purple" /> },
+    { title: 'Contributions', value: stats.contributions, icon: <GitBranch size={24} className="text-neon-blue" /> },
+    { title: 'Stars Earned', value: stats.stars, icon: <Star size={24} className="text-neon-purple" /> },
   ];
   
   return (
@@ -99,7 +103,7 @@ const UserStats = () => {
         <h2 className="text-2xl font-bold mb-6">Your Stats</h2>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, index) => (
+          {userStats.map((stat, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
