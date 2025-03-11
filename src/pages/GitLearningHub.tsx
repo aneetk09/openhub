@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, GitBranch, GitCommit, GitMerge } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CommandLine from '../components/CommandLine';
+import GitCommandList from '../components/git-learning-hub/GitCommandList';
+import CommandDetails from '../components/git-learning-hub/CommandDetails';
+import LearningResources from '../components/git-learning-hub/LearningResources';
 
 const GitLearningHub = () => {
   const [activeCommand, setActiveCommand] = useState('init');
@@ -101,52 +103,15 @@ const GitLearningHub = () => {
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
             <div className="lg:col-span-4">
-              <div className="sticky top-24 glass-morphism rounded-lg p-6">
-                <h2 className="text-xl font-bold mb-4 text-primary">Git Commands</h2>
-                <div className="space-y-2">
-                  {Object.entries(commands).map(([key, command]) => (
-                    <button
-                      key={key}
-                      onClick={() => setActiveCommand(key)}
-                      className={`w-full text-left p-3 rounded-lg transition-all flex items-center gap-3 
-                        ${activeCommand === key 
-                          ? 'bg-primary/10 text-primary' 
-                          : 'hover:bg-white/5 text-muted-foreground hover:text-primary'}`}
-                    >
-                      <GitBranch size={18} />
-                      <div>
-                        <div className="font-medium">{command.title}</div>
-                        <div className="text-sm text-muted-foreground">{command.description}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <GitCommandList 
+                commands={commands} 
+                activeCommand={activeCommand} 
+                onCommandSelect={setActiveCommand} 
+              />
             </div>
             
             <div className="lg:col-span-8">
-              <div className="glass-morphism rounded-lg p-6 mb-6">
-                <h2 className="text-xl font-bold mb-4 text-primary">{commands[activeCommand as keyof typeof commands].title}</h2>
-                <p className="text-muted-foreground mb-6">{commands[activeCommand as keyof typeof commands].description}</p>
-                
-                <div className="space-y-6">
-                  <div className="neo-blur rounded-lg p-4">
-                    <div className="text-muted-foreground mb-2">Syntax:</div>
-                    <div className="font-mono text-sm text-primary">{commands[activeCommand as keyof typeof commands].syntax}</div>
-                  </div>
-                  
-                  <div className="neo-blur rounded-lg p-4">
-                    <div className="text-muted-foreground mb-2">Example:</div>
-                    <div className="font-mono text-sm text-green-400">{commands[activeCommand as keyof typeof commands].example}</div>
-                  </div>
-                  
-                  <div className="neo-blur rounded-lg p-4">
-                    <div className="text-muted-foreground mb-2">Explanation:</div>
-                    <div className="text-sm text-foreground">{commands[activeCommand as keyof typeof commands].explanation}</div>
-                  </div>
-                </div>
-              </div>
-              
+              <CommandDetails command={commands[activeCommand as keyof typeof commands]} />
               <div className="glass-morphism rounded-lg">
                 <CommandLine
                   title="Try it yourself"
@@ -157,50 +122,7 @@ const GitLearningHub = () => {
             </div>
           </div>
           
-          <div className="glass-morphism rounded-lg p-6 mb-12">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-primary">
-              <BookOpen size={20} />
-              Further Learning Resources
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <a 
-                href="https://git-scm.com/doc" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="neo-blur rounded-lg p-4 hover:bg-white/10 transition-colors"
-              >
-                <h3 className="font-bold mb-2 flex items-center gap-2 text-primary">
-                  <GitBranch size={16} />
-                  Official Git Documentation
-                </h3>
-                <p className="text-sm text-muted-foreground">Comprehensive reference guide for all Git commands and features.</p>
-              </a>
-              <a 
-                href="https://learngitbranching.js.org/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="neo-blur rounded-lg p-4 hover:bg-white/10 transition-colors"
-              >
-                <h3 className="font-bold mb-2 flex items-center gap-2 text-primary">
-                  <GitCommit size={16} />
-                  Learn Git Branching
-                </h3>
-                <p className="text-sm text-muted-foreground">Interactive visualizations to challenge and strengthen your Git skills.</p>
-              </a>
-              <a 
-                href="https://www.atlassian.com/git/tutorials" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="neo-blur rounded-lg p-4 hover:bg-white/10 transition-colors"
-              >
-                <h3 className="font-bold mb-2 flex items-center gap-2 text-primary">
-                  <GitMerge size={16} />
-                  Atlassian Git Tutorials
-                </h3>
-                <p className="text-sm text-muted-foreground">Beginner to advanced Git tutorials with practical examples.</p>
-              </a>
-            </div>
-          </div>
+          <LearningResources />
           
           <div className="text-center">
             <button className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity">
