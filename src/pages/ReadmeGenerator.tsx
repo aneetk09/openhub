@@ -1,148 +1,83 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Github, Code, Link, Image, List, Check, Copy, Download } from 'lucide-react';
+import { 
+  FileEdit, Sparkles, BookOpen, GitBranch, 
+  Star, Link2, Code, Terminal 
+} from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { toast } from '../hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const ReadmeGenerator = () => {
-  const [formData, setFormData] = useState({
+  const [formState, setFormState] = useState({
     projectName: '',
     description: '',
     installation: '',
     usage: '',
-    features: [] as string[],
-    technologies: [] as string[],
-    contributing: '',
     license: 'MIT',
-    repositoryUrl: '',
-    demoUrl: '',
-    logoUrl: '',
+    includeContributing: true,
+    includeScreenshot: false,
+    badges: ['npm', 'license'],
   });
   
-  const [newFeature, setNewFeature] = useState('');
-  const [newTechnology, setNewTechnology] = useState('');
-  const [previewMarkdown, setPreviewMarkdown] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [activeTab, setActiveTab] = useState<'form' | 'preview'>('form');
+  const [generatedReadme, setGeneratedReadme] = useState<string | null>(null);
   
-  const addFeature = () => {
-    if (newFeature.trim()) {
-      setFormData({
-        ...formData,
-        features: [...formData.features, newFeature.trim()]
-      });
-      setNewFeature('');
-    }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormState(prev => ({ ...prev, [name]: value }));
   };
   
-  const removeFeature = (index: number) => {
-    setFormData({
-      ...formData,
-      features: formData.features.filter((_, i) => i !== index)
-    });
+  const handleCheckboxChange = (name: string, checked: boolean) => {
+    setFormState(prev => ({ ...prev, [name]: checked }));
   };
   
-  const addTechnology = () => {
-    if (newTechnology.trim()) {
-      setFormData({
-        ...formData,
-        technologies: [...formData.technologies, newTechnology.trim()]
-      });
-      setNewTechnology('');
-    }
-  };
-  
-  const removeTechnology = (index: number) => {
-    setFormData({
-      ...formData,
-      technologies: formData.technologies.filter((_, i) => i !== index)
-    });
+  const handleBadgeToggle = (badge: string) => {
+    setFormState(prev => ({
+      ...prev,
+      badges: prev.badges.includes(badge)
+        ? prev.badges.filter(b => b !== badge)
+        : [...prev.badges, badge]
+    }));
   };
   
   const generateReadme = () => {
-    setIsGenerating(true);
+    // Simple README template generation based on form state
+    let readme = `# ${formState.projectName}\n\n`;
     
-    setTimeout(() => {
-      const markdown = `
-# ${formData.projectName}
-
-${formData.logoUrl ? `<p align="center">
-  <img src="${formData.logoUrl}" alt="${formData.projectName} logo" width="200">
-</p>` : ''}
-
-## Description
-
-${formData.description}
-
-${formData.demoUrl ? `## Demo
-
-[View Live Demo](${formData.demoUrl})` : ''}
-
-${formData.features.length > 0 ? `## Features
-
-${formData.features.map(feature => `- ${feature}`).join('\n')}` : ''}
-
-${formData.technologies.length > 0 ? `## Technologies
-
-${formData.technologies.map(tech => `- ${tech}`).join('\n')}` : ''}
-
-## Installation
-
-\`\`\`bash
-${formData.installation}
-\`\`\`
-
-## Usage
-
-${formData.usage}
-
-${formData.contributing ? `## Contributing
-
-${formData.contributing}` : ''}
-
-## License
-
-This project is licensed under the ${formData.license} License${formData.license === 'MIT' ? ' - see the [LICENSE](LICENSE) file for details.' : '.'}
-
-${formData.repositoryUrl ? `## Repository
-
-[GitHub Repository](${formData.repositoryUrl})` : ''}
-`;
-      
-      setPreviewMarkdown(markdown);
-      setActiveTab('preview');
-      setIsGenerating(false);
-      
-      toast({
-        title: "README Generated!",
-        description: "Your README has been generated successfully.",
+    // Add badges
+    if (formState.badges.length > 0) {
+      formState.badges.forEach(badge => {
+        if (badge === 'npm') {
+          readme += `[![npm](https://img.shields.io/npm/v/${formState.projectName.toLowerCase()})](https://www.npmjs.com/package/${formState.projectName.toLowerCase()}) `;
+        } else if (badge === 'license') {
+          readme += `[![License](https://img.shields.io/badge/license-${formState.license}-blue.svg)](LICENSE) `;
+        }
       });
-    }, 1500);
-  };
-  
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(previewMarkdown);
-    toast({
-      title: "Copied to clipboard!",
-      description: "README markdown has been copied to your clipboard.",
-    });
-  };
-  
-  const downloadReadme = () => {
-    const element = document.createElement('a');
-    const file = new Blob([previewMarkdown], {type: 'text/markdown'});
-    element.href = URL.createObjectURL(file);
-    element.download = 'README.md';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+      readme += '\n\n';
+    }
     
-    toast({
-      title: "Downloaded!",
-      description: "README.md file has been downloaded.",
-    });
+    readme += `${formState.description}\n\n`;
+    
+    if (formState.includeScreenshot) {
+      readme += `## Screenshot\n\n![${formState.projectName}](screenshot.png)\n\n`;
+    }
+    
+    readme += `## Installation\n\n\`\`\`bash\n${formState.installation || 'npm install ' + formState.projectName.toLowerCase()}\n\`\`\`\n\n`;
+    
+    readme += `## Usage\n\n\`\`\`javascript\n${formState.usage || '// Example usage code\n'}\n\`\`\`\n\n`;
+    
+    if (formState.includeContributing) {
+      readme += `## Contributing\n\n1. Fork the project\n2. Create your feature branch (\`git checkout -b feature/amazing-feature\`)\n3. Commit your changes (\`git commit -m 'Add some amazing feature'\`)\n4. Push to the branch (\`git push origin feature/amazing-feature\`)\n5. Open a Pull Request\n\n`;
+    }
+    
+    readme += `## License\n\nThis project is licensed under the ${formState.license} License - see the [LICENSE](LICENSE) file for details.\n`;
+    
+    setGeneratedReadme(readme);
   };
   
   return (
@@ -150,375 +85,264 @@ ${formData.repositoryUrl ? `## Repository
       <Navbar />
       <main className="flex-grow pt-24 px-6 pb-20">
         <div className="container mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center max-w-3xl mx-auto mb-12"
-          >
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-blue-purple bg-clip-text text-transparent">
+          <div className="text-center mb-12">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-blue-purple bg-clip-text text-transparent"
+            >
               README Generator
-            </h1>
-            <p className="text-white/80">
-              Create professional README files for your GitHub projects with our interactive generator.
-              Fill in the form below and we'll create a markdown file for you.
-            </p>
-          </motion.div>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-white/70 max-w-2xl mx-auto"
+            >
+              Create professional README files for your open source projects
+            </motion.p>
+          </div>
           
-          <div className="glass-card p-6 md:p-8">
-            <div className="flex mb-6 border-b border-white/10">
-              <button
-                onClick={() => setActiveTab('form')}
-                className={`pb-3 px-4 font-medium text-sm ${
-                  activeTab === 'form' 
-                    ? 'text-primary border-b-2 border-primary -mb-px' 
-                    : 'text-white/70 hover:text-white/90'
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <FileText size={18} />
-                  Editor
-                </span>
-              </button>
-              <button
-                onClick={() => setActiveTab('preview')}
-                disabled={!previewMarkdown}
-                className={`pb-3 px-4 font-medium text-sm ${
-                  activeTab === 'preview' 
-                    ? 'text-primary border-b-2 border-primary -mb-px' 
-                    : previewMarkdown 
-                      ? 'text-white/70 hover:text-white/90' 
-                      : 'text-white/30 cursor-not-allowed'
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <Code size={18} />
-                  Preview
-                </span>
-              </button>
-            </div>
-            
-            {activeTab === 'form' ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-6">
-                    {/* Basic Information */}
-                    <div>
-                      <h3 className="font-medium mb-4 flex items-center gap-2">
-                        <FileText size={18} className="text-primary" />
-                        Basic Information
-                      </h3>
-                      
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm text-white/70 mb-1">
-                            Project Name*
-                          </label>
-                          <input 
-                            type="text" 
-                            value={formData.projectName}
-                            onChange={(e) => setFormData({...formData, projectName: e.target.value})}
-                            placeholder="My Awesome Project" 
-                            className="bg-white/5 border border-white/10 rounded-lg p-2 w-full 
-                                    focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm text-white/70 mb-1">
-                            Description*
-                          </label>
-                          <textarea 
-                            value={formData.description}
-                            onChange={(e) => setFormData({...formData, description: e.target.value})}
-                            placeholder="A brief description of what your project does and its purpose" 
-                            rows={3}
-                            className="bg-white/5 border border-white/10 rounded-lg p-2 w-full 
-                                    focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
-                            required
-                          />
-                        </div>
-                      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            {/* Form Section */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="glass-card p-6"
+            >
+              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                <FileEdit className="text-primary" size={20} />
+                Project Information
+              </h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="projectName" className="block text-sm font-medium mb-1">
+                    Project Name
+                  </label>
+                  <Input
+                    id="projectName"
+                    name="projectName"
+                    value={formState.projectName}
+                    onChange={handleChange}
+                    placeholder="awesome-project"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium mb-1">
+                    Description
+                  </label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={formState.description}
+                    onChange={handleChange}
+                    placeholder="A brief description of your project"
+                    rows={3}
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="installation" className="block text-sm font-medium mb-1">
+                    Installation Instructions
+                  </label>
+                  <Textarea
+                    id="installation"
+                    name="installation"
+                    value={formState.installation}
+                    onChange={handleChange}
+                    placeholder="npm install my-package"
+                    rows={2}
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="usage" className="block text-sm font-medium mb-1">
+                    Usage Example
+                  </label>
+                  <Textarea
+                    id="usage"
+                    name="usage"
+                    value={formState.usage}
+                    onChange={handleChange}
+                    placeholder="// Example code showing how to use your project"
+                    rows={4}
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="license" className="block text-sm font-medium mb-1">
+                    License
+                  </label>
+                  <select
+                    id="license"
+                    name="license"
+                    value={formState.license}
+                    onChange={handleChange}
+                    className="w-full p-2 bg-muted rounded-md border border-white/10 focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="MIT">MIT</option>
+                    <option value="Apache-2.0">Apache 2.0</option>
+                    <option value="GPL-3.0">GPL 3.0</option>
+                    <option value="BSD-3-Clause">BSD 3-Clause</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium mb-2 block">README Sections</label>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="includeContributing" 
+                        checked={formState.includeContributing}
+                        onCheckedChange={(checked) => 
+                          handleCheckboxChange('includeContributing', checked as boolean)
+                        }
+                      />
+                      <label 
+                        htmlFor="includeContributing"
+                        className="text-sm cursor-pointer"
+                      >
+                        Contributing Guidelines
+                      </label>
                     </div>
                     
-                    {/* Features and Technologies */}
-                    <div>
-                      <h3 className="font-medium mb-4 flex items-center gap-2">
-                        <List size={18} className="text-primary" />
-                        Features & Technologies
-                      </h3>
-                      
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm text-white/70 mb-1">
-                            Features
-                          </label>
-                          <div className="flex gap-2">
-                            <input 
-                              type="text" 
-                              value={newFeature}
-                              onChange={(e) => setNewFeature(e.target.value)}
-                              placeholder="Add a feature" 
-                              className="bg-white/5 border border-white/10 rounded-lg p-2 flex-grow 
-                                      focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
-                              onKeyDown={(e) => e.key === 'Enter' && addFeature()}
-                            />
-                            <button 
-                              onClick={addFeature}
-                              className="btn btn-primary px-3"
-                            >
-                              Add
-                            </button>
-                          </div>
-                          
-                          {formData.features.length > 0 && (
-                            <div className="mt-2 space-y-1">
-                              {formData.features.map((feature, index) => (
-                                <div key={index} className="flex items-center gap-2 bg-white/5 p-2 rounded-lg">
-                                  <Check size={14} className="text-green-500 flex-shrink-0" />
-                                  <span className="text-sm flex-grow">{feature}</span>
-                                  <button 
-                                    onClick={() => removeFeature(index)}
-                                    className="text-red-400 hover:text-red-300"
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm text-white/70 mb-1">
-                            Technologies
-                          </label>
-                          <div className="flex gap-2">
-                            <input 
-                              type="text" 
-                              value={newTechnology}
-                              onChange={(e) => setNewTechnology(e.target.value)}
-                              placeholder="Add a technology" 
-                              className="bg-white/5 border border-white/10 rounded-lg p-2 flex-grow 
-                                      focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
-                              onKeyDown={(e) => e.key === 'Enter' && addTechnology()}
-                            />
-                            <button 
-                              onClick={addTechnology}
-                              className="btn btn-primary px-3"
-                            >
-                              Add
-                            </button>
-                          </div>
-                          
-                          {formData.technologies.length > 0 && (
-                            <div className="mt-2 space-y-1">
-                              {formData.technologies.map((tech, index) => (
-                                <div key={index} className="flex items-center gap-2 bg-white/5 p-2 rounded-lg">
-                                  <Code size={14} className="text-neon-blue flex-shrink-0" />
-                                  <span className="text-sm flex-grow">{tech}</span>
-                                  <button 
-                                    onClick={() => removeTechnology(index)}
-                                    className="text-red-400 hover:text-red-300"
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-6">
-                    {/* Installation and Usage */}
-                    <div>
-                      <h3 className="font-medium mb-4 flex items-center gap-2">
-                        <Code size={18} className="text-primary" />
-                        Installation & Usage
-                      </h3>
-                      
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm text-white/70 mb-1">
-                            Installation Steps*
-                          </label>
-                          <textarea 
-                            value={formData.installation}
-                            onChange={(e) => setFormData({...formData, installation: e.target.value})}
-                            placeholder="npm install\nnpm start" 
-                            rows={3}
-                            className="bg-white/5 border border-white/10 rounded-lg p-2 w-full font-mono text-sm
-                                    focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm text-white/70 mb-1">
-                            Usage Instructions*
-                          </label>
-                          <textarea 
-                            value={formData.usage}
-                            onChange={(e) => setFormData({...formData, usage: e.target.value})}
-                            placeholder="How to use your project, with examples if possible." 
-                            rows={3}
-                            className="bg-white/5 border border-white/10 rounded-lg p-2 w-full
-                                    focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* URLs and License */}
-                    <div>
-                      <h3 className="font-medium mb-4 flex items-center gap-2">
-                        <Link size={18} className="text-primary" />
-                        Links & License
-                      </h3>
-                      
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm text-white/70 mb-1">
-                            GitHub Repository URL
-                          </label>
-                          <input 
-                            type="url" 
-                            value={formData.repositoryUrl}
-                            onChange={(e) => setFormData({...formData, repositoryUrl: e.target.value})}
-                            placeholder="https://github.com/username/repo" 
-                            className="bg-white/5 border border-white/10 rounded-lg p-2 w-full 
-                                    focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm text-white/70 mb-1">
-                            Demo URL
-                          </label>
-                          <input 
-                            type="url" 
-                            value={formData.demoUrl}
-                            onChange={(e) => setFormData({...formData, demoUrl: e.target.value})}
-                            placeholder="https://your-demo-url.com" 
-                            className="bg-white/5 border border-white/10 rounded-lg p-2 w-full 
-                                    focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm text-white/70 mb-1">
-                            Logo URL
-                          </label>
-                          <input 
-                            type="url" 
-                            value={formData.logoUrl}
-                            onChange={(e) => setFormData({...formData, logoUrl: e.target.value})}
-                            placeholder="https://url-to-your-logo.png" 
-                            className="bg-white/5 border border-white/10 rounded-lg p-2 w-full 
-                                    focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm text-white/70 mb-1">
-                            License
-                          </label>
-                          <select 
-                            value={formData.license}
-                            onChange={(e) => setFormData({...formData, license: e.target.value})}
-                            className="bg-white/5 border border-white/10 rounded-lg p-2 w-full 
-                                    focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
-                          >
-                            <option value="MIT">MIT</option>
-                            <option value="Apache-2.0">Apache 2.0</option>
-                            <option value="GPL-3.0">GPL 3.0</option>
-                            <option value="BSD-3-Clause">BSD 3-Clause</option>
-                            <option value="BSD-2-Clause">BSD 2-Clause</option>
-                          </select>
-                        </div>
-                      </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="includeScreenshot" 
+                        checked={formState.includeScreenshot}
+                        onCheckedChange={(checked) => 
+                          handleCheckboxChange('includeScreenshot', checked as boolean)
+                        }
+                      />
+                      <label 
+                        htmlFor="includeScreenshot"
+                        className="text-sm cursor-pointer"
+                      >
+                        Screenshot Placeholder
+                      </label>
                     </div>
                   </div>
                 </div>
                 
-                <div className="mt-8 text-center">
-                  <button 
-                    onClick={generateReadme}
-                    disabled={isGenerating || !formData.projectName || !formData.description || !formData.installation || !formData.usage}
-                    className="btn btn-primary px-8 py-3 group disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <span>Generate README</span>
-                        <FileText size={16} className="ml-2 transform transition-transform duration-300 group-hover:translate-x-1" />
-                      </>
-                    )}
-                  </button>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                {previewMarkdown ? (
-                  <>
-                    <div className="flex justify-end gap-2 mb-4">
-                      <button 
-                        onClick={copyToClipboard}
-                        className="btn btn-ghost btn-sm flex items-center gap-2"
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Badges</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['npm', 'license', 'stars', 'forks'].map(badge => (
+                      <button
+                        key={badge}
+                        onClick={() => handleBadgeToggle(badge)}
+                        className={`px-3 py-1 text-xs rounded-full transition-colors
+                          ${formState.badges.includes(badge) 
+                            ? 'bg-primary text-white' 
+                            : 'bg-muted text-white/70 hover:bg-white/10'}
+                        `}
                       >
-                        <Copy size={14} />
-                        <span>Copy</span>
+                        {badge.charAt(0).toUpperCase() + badge.slice(1)}
                       </button>
-                      <button 
-                        onClick={downloadReadme}
-                        className="btn btn-primary btn-sm flex items-center gap-2"
-                      >
-                        <Download size={14} />
-                        <span>Download</span>
-                      </button>
-                    </div>
-                    
-                    <div className="bg-dark-bg border border-white/10 rounded-lg p-6 markdown-preview font-mono text-sm whitespace-pre-wrap overflow-auto max-h-[60vh]">
-                      {previewMarkdown}
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-12">
-                    <FileText size={48} className="mx-auto mb-4 text-white/30" />
-                    <h3 className="text-lg font-medium mb-1">No README generated yet</h3>
-                    <p className="text-white/50">
-                      Fill out the form and click "Generate README" to see the preview.
-                    </p>
-                    <button 
-                      onClick={() => setActiveTab('form')}
-                      className="btn btn-ghost mt-4"
-                    >
-                      Back to Editor
-                    </button>
+                    ))}
                   </div>
-                )}
-              </motion.div>
-            )}
+                </div>
+                
+                <Button 
+                  className="w-full mt-4 gap-2" 
+                  onClick={generateReadme}
+                  disabled={!formState.projectName}
+                >
+                  <Sparkles size={16} />
+                  Generate README
+                </Button>
+              </div>
+            </motion.div>
+            
+            {/* Preview Section */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="glass-card p-6"
+            >
+              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                <BookOpen className="text-primary" size={20} />
+                README Preview
+              </h2>
+              
+              {generatedReadme ? (
+                <div className="bg-dark-bg rounded-lg p-4 font-mono text-sm h-[500px] overflow-y-auto">
+                  <pre className="whitespace-pre-wrap">{generatedReadme}</pre>
+                </div>
+              ) : (
+                <div className="bg-dark-bg rounded-lg p-4 h-[500px] flex items-center justify-center text-white/50">
+                  Fill in the form and click "Generate README" to see a preview here
+                </div>
+              )}
+              
+              {generatedReadme && (
+                <div className="mt-4 flex justify-end space-x-2">
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedReadme);
+                      alert("README copied to clipboard!");
+                    }}
+                  >
+                    Copy to Clipboard
+                  </Button>
+                  <Button onClick={() => {
+                    const blob = new Blob([generatedReadme], {type: 'text/markdown'});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'README.md';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                  }}>
+                    Download README.md
+                  </Button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+          
+          <div className="glass-card p-6 mb-12">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Star className="text-primary" size={20} />
+              README Best Practices
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg bg-white/5">
+                <h3 className="font-bold mb-2 flex items-center gap-2">
+                  <Link2 className="text-neon-blue" size={16} />
+                  Clear Structure
+                </h3>
+                <p className="text-sm text-white/70">Use headings to organize your README and make information easy to find.</p>
+              </div>
+              <div className="p-4 rounded-lg bg-white/5">
+                <h3 className="font-bold mb-2 flex items-center gap-2">
+                  <Code className="text-neon-blue" size={16} />
+                  Code Examples
+                </h3>
+                <p className="text-sm text-white/70">Include clear code examples that show how to use your project.</p>
+              </div>
+              <div className="p-4 rounded-lg bg-white/5">
+                <h3 className="font-bold mb-2 flex items-center gap-2">
+                  <Terminal className="text-neon-blue" size={16} />
+                  Installation Steps
+                </h3>
+                <p className="text-sm text-white/70">Provide detailed installation instructions with command-line examples.</p>
+              </div>
+              <div className="p-4 rounded-lg bg-white/5">
+                <h3 className="font-bold mb-2 flex items-center gap-2">
+                  <GitBranch className="text-neon-blue" size={16} />
+                  Contributing Guidelines
+                </h3>
+                <p className="text-sm text-white/70">Explain how others can contribute to your project to encourage collaboration.</p>
+              </div>
+            </div>
           </div>
         </div>
       </main>

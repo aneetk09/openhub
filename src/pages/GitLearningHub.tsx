@@ -1,12 +1,81 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { GitBranch, Check, Terminal, Code, Award } from 'lucide-react';
+import { BookOpen, GitBranch, GitCommit, GitMerge } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { toast } from '@/hooks/use-toast';
+import CommandLine from '../components/CommandLine';
 
 const GitLearningHub = () => {
+  const [activeCommand, setActiveCommand] = useState('init');
+  
+  const commands = {
+    init: {
+      title: 'Git Init',
+      description: 'Initialize a new Git repository',
+      syntax: 'git init [directory]',
+      example: 'git init my-project',
+      explanation: 'Creates a new Git repository in the specified directory or the current directory if none is specified.'
+    },
+    clone: {
+      title: 'Git Clone',
+      description: 'Clone a repository into a new directory',
+      syntax: 'git clone [url] [directory]',
+      example: 'git clone https://github.com/user/repository.git',
+      explanation: 'Creates a copy of an existing Git repository, including all files, branches, and commits.'
+    },
+    add: {
+      title: 'Git Add',
+      description: 'Add file contents to the index',
+      syntax: 'git add [file]',
+      example: 'git add index.html',
+      explanation: 'Stages changes in the working directory for the next commit.'
+    },
+    commit: {
+      title: 'Git Commit',
+      description: 'Record changes to the repository',
+      syntax: 'git commit -m "[message]"',
+      example: 'git commit -m "Fix navigation bug"',
+      explanation: 'Creates a snapshot of the staged changes along with a descriptive message.'
+    },
+    push: {
+      title: 'Git Push',
+      description: 'Update remote refs along with associated objects',
+      syntax: 'git push [remote] [branch]',
+      example: 'git push origin main',
+      explanation: 'Uploads local repository content to a remote repository.'
+    }
+  };
+  
+  const handleCommandExecution = (command: string): string => {
+    const commandParts = command.split(' ');
+    const mainCommand = commandParts[0];
+    
+    switch (mainCommand) {
+      case 'help':
+        return 'Available commands: init, clone, add, commit, push';
+      case 'init':
+        return 'Initialized empty Git repository';
+      case 'clone':
+        return commandParts[1] 
+          ? `Cloning into '${commandParts[1]}'...` 
+          : 'Error: Please specify a repository URL';
+      case 'add':
+        return commandParts[1]
+          ? `Added ${commandParts[1]} to staging area`
+          : 'Error: Please specify a file to add';
+      case 'commit':
+        if (commandParts[1] === '-m' && commandParts[2]) {
+          return `[main] ${commandParts.slice(2).join(' ')}`;
+        }
+        return 'Error: Please provide a commit message with -m flag';
+      case 'push':
+        return 'Everything up-to-date';
+      default:
+        return `Command not found: ${mainCommand}. Type 'help' for available commands.`;
+    }
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -27,236 +96,116 @@ const GitLearningHub = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-white/70 max-w-2xl mx-auto"
             >
-              Master Git with interactive challenges and visual explanations. Learn essential commands
-              and workflows used in open source development.
+              Learn Git commands with interactive challenges and visual explanations
             </motion.p>
           </div>
           
-          <GitInteractiveChallenges />
-          <GitCommandReference />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <div className="lg:col-span-1">
+              <div className="glass-card p-6 h-full">
+                <h2 className="text-xl font-bold mb-4">Git Commands</h2>
+                <div className="space-y-2">
+                  {Object.entries(commands).map(([key, command]) => (
+                    <button
+                      key={key}
+                      onClick={() => setActiveCommand(key)}
+                      className={`w-full text-left p-3 rounded-lg transition-all flex items-center gap-3 
+                        ${activeCommand === key 
+                          ? 'bg-primary/10 text-primary' 
+                          : 'hover:bg-white/5'}`}
+                    >
+                      <GitBranch size={18} />
+                      <div>
+                        <div className="font-bold">{command.title}</div>
+                        <div className="text-sm text-white/60">{command.description}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="lg:col-span-2">
+              <div className="glass-card p-6 mb-6">
+                <h2 className="text-xl font-bold mb-2">{commands[activeCommand as keyof typeof commands].title}</h2>
+                <p className="text-white/70 mb-4">{commands[activeCommand as keyof typeof commands].description}</p>
+                
+                <div className="bg-dark-bg rounded-lg p-4 font-mono text-sm mb-4">
+                  <div className="text-white/50 mb-1">Syntax:</div>
+                  <div className="text-primary">{commands[activeCommand as keyof typeof commands].syntax}</div>
+                </div>
+                
+                <div className="bg-dark-bg rounded-lg p-4 font-mono text-sm mb-4">
+                  <div className="text-white/50 mb-1">Example:</div>
+                  <div className="text-green-400">{commands[activeCommand as keyof typeof commands].example}</div>
+                </div>
+                
+                <div className="bg-dark-bg rounded-lg p-4 text-sm">
+                  <div className="text-white/50 mb-1">Explanation:</div>
+                  <div>{commands[activeCommand as keyof typeof commands].explanation}</div>
+                </div>
+              </div>
+              
+              <CommandLine
+                title="Try it yourself"
+                onCommandEnter={handleCommandExecution}
+                className="h-full"
+              />
+            </div>
+          </div>
+          
+          <div className="glass-card p-6 mb-12">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <BookOpen size={20} className="text-primary" />
+              Further Learning Resources
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <a 
+                href="https://git-scm.com/doc" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <h3 className="font-bold mb-2 flex items-center gap-2">
+                  <GitBranch size={16} className="text-neon-blue" />
+                  Official Git Documentation
+                </h3>
+                <p className="text-sm text-white/70">Comprehensive reference guide for all Git commands and features.</p>
+              </a>
+              <a 
+                href="https://learngitbranching.js.org/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <h3 className="font-bold mb-2 flex items-center gap-2">
+                  <GitCommit size={16} className="text-neon-blue" />
+                  Learn Git Branching
+                </h3>
+                <p className="text-sm text-white/70">Interactive visualizations to challenge and strengthen your Git skills.</p>
+              </a>
+              <a 
+                href="https://www.atlassian.com/git/tutorials" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <h3 className="font-bold mb-2 flex items-center gap-2">
+                  <GitMerge size={16} className="text-neon-blue" />
+                  Atlassian Git Tutorials
+                </h3>
+                <p className="text-sm text-white/70">Beginner to advanced Git tutorials with practical examples.</p>
+              </a>
+            </div>
+          </div>
+          
+          <div className="text-center">
+            <button className="btn btn-primary">Interactive Challenges Coming Soon</button>
+          </div>
         </div>
       </main>
       <Footer />
     </div>
-  );
-};
-
-const challenges = [
-  {
-    id: 1,
-    title: 'Initialize a Repository',
-    description: 'Create a new Git repository and stage your first file.',
-    commands: ['git init', 'git add <file>'],
-    difficulty: 'beginner',
-    xp: 10,
-  },
-  {
-    id: 2,
-    title: 'Make Your First Commit',
-    description: 'Commit your changes with a meaningful message.',
-    commands: ['git commit -m "message"'],
-    difficulty: 'beginner',
-    xp: 10,
-  },
-  {
-    id: 3,
-    title: 'Branch and Merge',
-    description: 'Create a branch, make changes, and merge it back to main.',
-    commands: ['git branch <name>', 'git checkout <name>', 'git merge <name>'],
-    difficulty: 'intermediate',
-    xp: 25,
-  },
-  {
-    id: 4,
-    title: 'Resolve a Merge Conflict',
-    description: 'Fix conflicts that occur when merging branches with competing changes.',
-    commands: ['git merge <branch>', '// Edit conflict files', 'git add <files>', 'git commit'],
-    difficulty: 'advanced',
-    xp: 50,
-  },
-];
-
-const GitInteractiveChallenges = () => {
-  return (
-    <section className="mb-16">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-2xl font-bold">Interactive Challenges</h2>
-        <span className="glass-card px-3 py-1 text-sm">
-          <span className="text-neon-purple font-medium">85 XP</span> earned
-        </span>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {challenges.map((challenge, index) => (
-          <ChallengeCard 
-            key={challenge.id}
-            challenge={challenge}
-            index={index}
-            completed={index < 2}
-          />
-        ))}
-      </div>
-    </section>
-  );
-};
-
-const ChallengeCard = ({ 
-  challenge, 
-  index,
-  completed 
-}: { 
-  challenge: any,
-  index: number,
-  completed: boolean
-}) => {
-  const handleStartChallenge = () => {
-    toast({
-      title: "Challenge started",
-      description: `You've started the "${challenge.title}" challenge.`,
-    });
-  };
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="glass-card p-6 relative"
-    >
-      {completed && (
-        <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
-          <Check size={14} className="text-green-500" />
-        </div>
-      )}
-      
-      <div className="flex items-center gap-3 mb-4">
-        <div className={`p-2 rounded-full ${
-          challenge.difficulty === 'beginner' 
-            ? 'bg-blue-500/20 text-blue-400' 
-            : challenge.difficulty === 'intermediate'
-              ? 'bg-yellow-500/20 text-yellow-400'
-              : 'bg-red-500/20 text-red-400'
-        }`}>
-          <GitBranch size={20} />
-        </div>
-        <div>
-          <h3 className="font-bold text-lg">{challenge.title}</h3>
-          <div className="flex items-center gap-2 text-sm text-white/70">
-            <span className={`capitalize ${
-              challenge.difficulty === 'beginner' 
-                ? 'text-blue-400' 
-                : challenge.difficulty === 'intermediate'
-                  ? 'text-yellow-400'
-                  : 'text-red-400'
-            }`}>{challenge.difficulty}</span>
-            <span>•</span>
-            <span>{challenge.xp} XP</span>
-          </div>
-        </div>
-      </div>
-      
-      <p className="text-white/80 mb-4">{challenge.description}</p>
-      
-      <div className="glass-card p-3 mb-4 font-mono text-sm">
-        {challenge.commands.map((cmd: string, i: number) => (
-          <div key={i} className="flex items-start mb-1 last:mb-0">
-            <span className="text-green-400 mr-2">$</span>
-            <span>{cmd}</span>
-          </div>
-        ))}
-      </div>
-      
-      <button
-        onClick={handleStartChallenge}
-        className={`btn ${completed ? 'btn-ghost' : 'btn-primary'} w-full`}
-      >
-        {completed ? 'Replay Challenge' : 'Start Challenge'}
-      </button>
-    </motion.div>
-  );
-};
-
-const commands = [
-  {
-    category: 'Basics',
-    commands: [
-      { name: 'git init', description: 'Initialize a new Git repository' },
-      { name: 'git clone <url>', description: 'Clone a repository from remote' },
-      { name: 'git add <file>', description: 'Add file to staging area' },
-      { name: 'git commit -m "message"', description: 'Commit staged changes' },
-      { name: 'git status', description: 'Show working tree status' },
-    ]
-  },
-  {
-    category: 'Branching',
-    commands: [
-      { name: 'git branch', description: 'List all branches' },
-      { name: 'git branch <name>', description: 'Create a new branch' },
-      { name: 'git checkout <branch>', description: 'Switch to branch' },
-      { name: 'git checkout -b <name>', description: 'Create and checkout new branch' },
-      { name: 'git merge <branch>', description: 'Merge branch into current branch' },
-    ]
-  },
-  {
-    category: 'Remote',
-    commands: [
-      { name: 'git remote add <name> <url>', description: 'Add a remote repository' },
-      { name: 'git push <remote> <branch>', description: 'Push changes to remote' },
-      { name: 'git pull <remote> <branch>', description: 'Pull changes from remote' },
-      { name: 'git fetch', description: 'Download objects and refs from remote' },
-      { name: 'git remote -v', description: 'List all remotes' },
-    ]
-  },
-];
-
-const GitCommandReference = () => {
-  const [activeCategory, setActiveCategory] = useState('Basics');
-  
-  return (
-    <section>
-      <h2 className="text-2xl font-bold mb-8">Command Reference</h2>
-      
-      <div className="flex space-x-2 mb-6 overflow-x-auto pb-2">
-        {commands.map((category) => (
-          <button
-            key={category.category}
-            onClick={() => setActiveCategory(category.category)}
-            className={`px-4 py-2 rounded-lg whitespace-nowrap ${
-              activeCategory === category.category
-                ? 'bg-primary text-white'
-                : 'bg-white/5 hover:bg-white/10'
-            }`}
-          >
-            {category.category}
-          </button>
-        ))}
-      </div>
-      
-      <div className="glass-card p-0 overflow-hidden">
-        <div className="divide-y divide-white/10">
-          {commands
-            .find(c => c.category === activeCategory)?.commands
-            .map((cmd, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="p-4 hover:bg-white/5 transition-colors"
-              >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                  <div className="font-mono text-primary font-medium">
-                    {cmd.name}
-                  </div>
-                  <div className="text-white/70">
-                    {cmd.description}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-        </div>
-      </div>
-    </section>
   );
 };
 

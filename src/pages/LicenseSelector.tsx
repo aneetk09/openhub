@@ -1,10 +1,14 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Search, Check, Shield, Users, CopyCheck, Download, Copy, HelpCircle } from 'lucide-react';
+import { 
+  Award, Check, Heart, AlertCircle, Code, 
+  HelpCircle, Link2, FileText 
+} from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { toast } from '../hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface License {
   id: string;
@@ -13,15 +17,11 @@ interface License {
   permissions: string[];
   limitations: string[];
   conditions: string[];
-  popular: boolean;
+  popularity: number; // 1-10 scale
+  content: string;
 }
 
 const LicenseSelector = () => {
-  const [selectedLicense, setSelectedLicense] = useState<License | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'finder' | 'comparison'>('finder');
-  const [showTooltip, setShowTooltip] = useState<string | null>(null);
-  
   const licenses: License[] = [
     {
       id: 'mit',
@@ -30,66 +30,10 @@ const LicenseSelector = () => {
       permissions: ['Commercial use', 'Modification', 'Distribution', 'Private use'],
       limitations: ['Liability', 'Warranty'],
       conditions: ['License and copyright notice'],
-      popular: true
-    },
-    {
-      id: 'apache-2.0',
-      name: 'Apache License 2.0',
-      description: 'A permissive license that also provides an express grant of patent rights from contributors to users.',
-      permissions: ['Commercial use', 'Modification', 'Distribution', 'Patent use', 'Private use'],
-      limitations: ['Trademark use', 'Liability', 'Warranty'],
-      conditions: ['License and copyright notice', 'State changes', 'Disclosure of source'],
-      popular: true
-    },
-    {
-      id: 'gpl-3.0',
-      name: 'GNU General Public License v3.0',
-      description: 'Permissions of this strong copyleft license are conditioned on making available complete source code of licensed works and modifications.',
-      permissions: ['Commercial use', 'Modification', 'Distribution', 'Patent use', 'Private use'],
-      limitations: ['Liability', 'Warranty'],
-      conditions: ['License and copyright notice', 'State changes', 'Disclose source', 'Same license', 'Network use is distribution'],
-      popular: true
-    },
-    {
-      id: 'bsd-2-clause',
-      name: 'BSD 2-Clause License',
-      description: 'A permissive license that comes in two variants, the BSD 2-Clause and BSD 3-Clause.',
-      permissions: ['Commercial use', 'Modification', 'Distribution', 'Private use'],
-      limitations: ['Liability', 'Warranty'],
-      conditions: ['License and copyright notice'],
-      popular: false
-    },
-    {
-      id: 'bsd-3-clause',
-      name: 'BSD 3-Clause License',
-      description: 'A permissive license similar to the BSD 2-Clause License, but with a 3rd clause that prohibits others from using the name of the contributor to promote derived products without written consent.',
-      permissions: ['Commercial use', 'Modification', 'Distribution', 'Private use'],
-      limitations: ['Liability', 'Warranty'],
-      conditions: ['License and copyright notice', 'No endorsement'],
-      popular: false
-    },
-    {
-      id: 'lgpl-3.0',
-      name: 'GNU Lesser General Public License v3.0',
-      description: 'Permissions of this copyleft license are conditioned on making available complete source code of licensed works and modifications.',
-      permissions: ['Commercial use', 'Modification', 'Distribution', 'Patent use', 'Private use'],
-      limitations: ['Liability', 'Warranty'],
-      conditions: ['License and copyright notice', 'Disclose source', 'State changes', 'Same license (library)'],
-      popular: false
-    }
-  ];
-  
-  const filteredLicenses = licenses.filter(license => 
-    license.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    license.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
-  const getLicenseText = (licenseId: string): string => {
-    // Simplified license text for demo purposes
-    if (licenseId === 'mit') {
-      return `MIT License
+      popularity: 9,
+      content: `MIT License
 
-Copyright (c) ${new Date().getFullYear()} Your Name
+Copyright (c) [year] [fullname]
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -107,39 +51,99 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.`;
+SOFTWARE.`
+    },
+    {
+      id: 'apache-2.0',
+      name: 'Apache License 2.0',
+      description: 'A permissive license whose main conditions require preservation of copyright and license notices.',
+      permissions: ['Commercial use', 'Modification', 'Distribution', 'Patent use', 'Private use'],
+      limitations: ['Trademark use', 'Liability', 'Warranty'],
+      conditions: ['License and copyright notice', 'State changes'],
+      popularity: 8,
+      content: `Apache License
+Version 2.0, January 2004
+http://www.apache.org/licenses/
+
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+[Full license text is too long for this example]`
+    },
+    {
+      id: 'gpl-3.0',
+      name: 'GNU GPLv3',
+      description: 'Permissions of this strong copyleft license are conditioned on making available complete source code of licensed works and modifications.',
+      permissions: ['Commercial use', 'Modification', 'Distribution', 'Patent use', 'Private use'],
+      limitations: ['Liability', 'Warranty'],
+      conditions: ['License and copyright notice', 'State changes', 'Disclose source', 'Same license'],
+      popularity: 7,
+      content: `GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+[Full license text is too long for this example]`
+    },
+    {
+      id: 'bsd-3-clause',
+      name: 'BSD 3-Clause License',
+      description: 'A permissive license similar to the BSD 2-Clause License, but with a 3rd clause that prohibits others from using the name of the project or its contributors to promote derived products without written consent.',
+      permissions: ['Commercial use', 'Modification', 'Distribution', 'Private use'],
+      limitations: ['Liability', 'Warranty'],
+      conditions: ['License and copyright notice'],
+      popularity: 6,
+      content: `BSD 3-Clause License
+
+Copyright (c) [year], [fullname]
+All rights reserved.
+
+[Full license text is too long for this example]`
+    }
+  ];
+  
+  const [selectedLicense, setSelectedLicense] = useState<License | null>(null);
+  const [filters, setFilters] = useState({
+    commercial: false,
+    patent: false,
+    copyleft: false,
+    permissive: true,
+  });
+  
+  const toggleFilter = (key: keyof typeof filters) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+  
+  const filteredLicenses = licenses.filter(license => {
+    if (filters.commercial && !license.permissions.includes('Commercial use')) return false;
+    if (filters.patent && !license.permissions.includes('Patent use')) return false;
+    if (filters.copyleft && !license.conditions.includes('Same license')) return false;
+    if (filters.permissive && license.conditions.includes('Same license')) return false;
+    return true;
+  });
+  
+  const handleLicenseSelect = (license: License) => {
+    setSelectedLicense(license);
+  };
+  
+  const getFeaturedTags = (license: License) => {
+    const tags = [];
+    
+    if (license.permissions.includes('Commercial use')) {
+      tags.push('Commercial friendly');
     }
     
-    return `This is a placeholder for the ${licenseId.toUpperCase()} license text.
+    if (license.conditions.includes('Same license')) {
+      tags.push('Copyleft');
+    } else {
+      tags.push('Permissive');
+    }
     
-In a real application, this would contain the full text of the selected license.`;
-  };
-  
-  const copyToClipboard = () => {
-    if (!selectedLicense) return;
+    if (license.permissions.includes('Patent use')) {
+      tags.push('Patent protection');
+    }
     
-    navigator.clipboard.writeText(getLicenseText(selectedLicense.id));
-    toast({
-      title: "Copied to clipboard!",
-      description: `${selectedLicense.name} has been copied to your clipboard.`,
-    });
-  };
-  
-  const downloadLicense = () => {
-    if (!selectedLicense) return;
-    
-    const element = document.createElement('a');
-    const file = new Blob([getLicenseText(selectedLicense.id)], {type: 'text/plain'});
-    element.href = URL.createObjectURL(file);
-    element.download = 'LICENSE';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    
-    toast({
-      title: "Downloaded!",
-      description: "LICENSE file has been downloaded.",
-    });
+    return tags;
   };
   
   return (
@@ -147,394 +151,325 @@ In a real application, this would contain the full text of the selected license.
       <Navbar />
       <main className="flex-grow pt-24 px-6 pb-20">
         <div className="container mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center max-w-3xl mx-auto mb-12"
-          >
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-blue-purple bg-clip-text text-transparent">
+          <div className="text-center mb-12">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-blue-purple bg-clip-text text-transparent"
+            >
               Open Source License Selector
-            </h1>
-            <p className="text-white/80">
-              Choose the right license for your open source project.
-              Compare different licenses and understand their permissions, conditions, and limitations.
-            </p>
-          </motion.div>
-          
-          <div className="flex mb-6 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('finder')}
-              className={`pb-3 px-4 font-medium text-sm whitespace-nowrap ${
-                activeTab === 'finder' 
-                  ? 'text-primary border-b-2 border-primary' 
-                  : 'text-white/70 hover:text-white/90'
-              }`}
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-white/70 max-w-2xl mx-auto"
             >
-              <span className="flex items-center gap-2">
-                <Search size={18} />
-                License Finder
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab('comparison')}
-              className={`pb-3 px-4 font-medium text-sm whitespace-nowrap ${
-                activeTab === 'comparison' 
-                  ? 'text-primary border-b-2 border-primary' 
-                  : 'text-white/70 hover:text-white/90'
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <FileText size={18} />
-                License Comparison
-              </span>
-            </button>
+              Choose the right license for your open source project
+            </motion.p>
           </div>
           
-          {activeTab === 'finder' ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1 space-y-6">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="glass-card p-6"
-                >
-                  <h2 className="text-lg font-bold mb-4">Find a License</h2>
-                  
-                  <div className="mb-6">
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-white/50">
-                        <Search size={18} />
-                      </div>
-                      <input 
-                        type="text" 
-                        placeholder="Search licenses..." 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 pr-4 py-2 w-full bg-white/5 border border-white/10 rounded-lg 
-                                 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary 
-                                 transition-colors"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium text-white/50 uppercase">Popular Licenses</h3>
-                    {filteredLicenses
-                      .filter(license => license.popular)
-                      .map((license) => (
-                        <button
-                          key={license.id}
-                          onClick={() => setSelectedLicense(license)}
-                          className={`flex items-center justify-between w-full p-3 rounded-lg transition-colors ${
-                            selectedLicense?.id === license.id 
-                              ? 'bg-primary/20 text-primary' 
-                              : 'bg-white/5 hover:bg-white/10 text-white'
-                          }`}
-                        >
-                          <span>{license.name}</span>
-                          {selectedLicense?.id === license.id && <Check size={16} />}
-                        </button>
-                      ))}
-                    
-                    {filteredLicenses.some(license => !license.popular) && (
-                      <>
-                        <h3 className="text-sm font-medium text-white/50 uppercase mt-4">Other Licenses</h3>
-                        {filteredLicenses
-                          .filter(license => !license.popular)
-                          .map((license) => (
-                            <button
-                              key={license.id}
-                              onClick={() => setSelectedLicense(license)}
-                              className={`flex items-center justify-between w-full p-3 rounded-lg transition-colors ${
-                                selectedLicense?.id === license.id 
-                                  ? 'bg-primary/20 text-primary' 
-                                  : 'bg-white/5 hover:bg-white/10 text-white'
-                              }`}
-                            >
-                              <span>{license.name}</span>
-                              {selectedLicense?.id === license.id && <Check size={16} />}
-                            </button>
-                          ))}
-                      </>
-                    )}
-                    
-                    {filteredLicenses.length === 0 && (
-                      <div className="text-center py-8">
-                        <Search size={32} className="mx-auto mb-2 text-white/30" />
-                        <p className="text-white/50">No licenses found matching your search.</p>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <div className="lg:col-span-1">
+              <div className="glass-card p-6 mb-6">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <HelpCircle className="text-primary" size={20} />
+                  What are you looking for?
+                </h2>
                 
-                {selectedLicense && (
-                  <div className="glass-card p-6 space-y-4">
-                    <h3 className="font-bold">How to apply this license:</h3>
-                    <ol className="space-y-2 text-white/80 list-decimal pl-4">
-                      <li>Download the LICENSE file</li>
-                      <li>Place it in the root of your project repository</li>
-                      <li>Include a license notice in your README.md</li>
-                      <li>Add copyright notices to your source files</li>
-                    </ol>
-                    
-                    <div className="pt-4 flex flex-col sm:flex-row gap-2">
-                      <button 
-                        onClick={copyToClipboard}
-                        className="btn btn-ghost flex-1 flex items-center justify-center gap-2"
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => toggleFilter('commercial')}
+                      className={`p-2 rounded-lg flex items-center gap-2 transition-colors w-full
+                        ${filters.commercial ? 'bg-primary/20 text-primary' : 'bg-white/5 hover:bg-white/10'}`}
+                    >
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center
+                        ${filters.commercial ? 'bg-primary' : 'border border-white/30'}`}
                       >
-                        <Copy size={16} />
-                        <span>Copy License</span>
-                      </button>
-                      <button 
-                        onClick={downloadLicense}
-                        className="btn btn-primary flex-1 flex items-center justify-center gap-2"
-                      >
-                        <Download size={16} />
-                        <span>Download</span>
-                      </button>
-                    </div>
+                        {filters.commercial && <Check size={12} />}
+                      </div>
+                      <span>Commercial use</span>
+                    </button>
                   </div>
-                )}
+                  
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => toggleFilter('patent')}
+                      className={`p-2 rounded-lg flex items-center gap-2 transition-colors w-full
+                        ${filters.patent ? 'bg-primary/20 text-primary' : 'bg-white/5 hover:bg-white/10'}`}
+                    >
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center
+                        ${filters.patent ? 'bg-primary' : 'border border-white/30'}`}
+                      >
+                        {filters.patent && <Check size={12} />}
+                      </div>
+                      <span>Patent protection</span>
+                    </button>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => toggleFilter('permissive')}
+                      className={`p-2 rounded-lg flex items-center gap-2 transition-colors w-full
+                        ${filters.permissive ? 'bg-primary/20 text-primary' : 'bg-white/5 hover:bg-white/10'}`}
+                    >
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center
+                        ${filters.permissive ? 'bg-primary' : 'border border-white/30'}`}
+                      >
+                        {filters.permissive && <Check size={12} />}
+                      </div>
+                      <span>Permissive</span>
+                    </button>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => toggleFilter('copyleft')}
+                      className={`p-2 rounded-lg flex items-center gap-2 transition-colors w-full
+                        ${filters.copyleft ? 'bg-primary/20 text-primary' : 'bg-white/5 hover:bg-white/10'}`}
+                    >
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center
+                        ${filters.copyleft ? 'bg-primary' : 'border border-white/30'}`}
+                      >
+                        {filters.copyleft && <Check size={12} />}
+                      </div>
+                      <span>Copyleft/Share alike</span>
+                    </button>
+                  </div>
+                </div>
               </div>
               
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="lg:col-span-2"
-              >
-                {selectedLicense ? (
-                  <div className="glass-card p-6">
-                    <h2 className="text-2xl font-bold mb-2">{selectedLicense.name}</h2>
-                    <p className="text-white/70 mb-6">{selectedLicense.description}</p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                      <div>
-                        <h3 className="flex items-center gap-2 font-medium mb-3 text-green-400">
-                          <Check size={18} />
-                          <span>Permissions</span>
-                        </h3>
-                        <ul className="space-y-2">
-                          {selectedLicense.permissions.map((permission, index) => (
-                            <li key={index} className="flex items-center gap-2 text-sm">
-                              <span className="w-1 h-1 rounded-full bg-green-400"></span>
-                              <span>{permission}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      
-                      <div>
-                        <h3 className="flex items-center gap-2 font-medium mb-3 text-yellow-400">
-                          <CopyCheck size={18} />
-                          <span>Conditions</span>
-                        </h3>
-                        <ul className="space-y-2">
-                          {selectedLicense.conditions.map((condition, index) => (
-                            <li key={index} className="flex items-center gap-2 text-sm">
-                              <span className="w-1 h-1 rounded-full bg-yellow-400"></span>
-                              <span>{condition}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      
-                      <div>
-                        <h3 className="flex items-center gap-2 font-medium mb-3 text-red-400">
-                          <Shield size={18} />
-                          <span>Limitations</span>
-                        </h3>
-                        <ul className="space-y-2">
-                          {selectedLicense.limitations.map((limitation, index) => (
-                            <li key={index} className="flex items-center gap-2 text-sm">
-                              <span className="w-1 h-1 rounded-full bg-red-400"></span>
-                              <span>{limitation}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-dark-bg border border-white/10 rounded-lg p-4 font-mono text-sm max-h-[400px] overflow-auto whitespace-pre-wrap">
-                      {getLicenseText(selectedLicense.id)}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="glass-card p-12 text-center h-full flex flex-col items-center justify-center">
-                    <FileText size={64} className="text-white/20 mb-4" />
-                    <h3 className="text-xl font-bold mb-2">Select a License</h3>
-                    <p className="text-white/60 max-w-md">
-                      Choose a license from the list to see its details, permissions,
-                      conditions, and limitations.
+              <div className="glass-card p-6">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <AlertCircle className="text-primary" size={20} />
+                  Quick Guide
+                </h2>
+                
+                <div className="space-y-4 text-sm">
+                  <div>
+                    <h3 className="font-bold mb-1">Permissive Licenses</h3>
+                    <p className="text-white/70">
+                      Allow for maximum freedom with few restrictions. Great for libraries and frameworks.
                     </p>
                   </div>
-                )}
-              </motion.div>
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="glass-card p-6 overflow-hidden"
-            >
-              <h2 className="text-xl font-bold mb-4">License Comparison</h2>
-              
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="py-3 px-4 font-medium sticky left-0 bg-dark-bg">License</th>
-                      <th className="py-3 px-4 font-medium text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <span>Permissions</span>
-                          <div className="relative">
-                            <HelpCircle 
-                              size={14} 
-                              className="text-white/50 cursor-help"
-                              onMouseEnter={() => setShowTooltip('permissions')}
-                              onMouseLeave={() => setShowTooltip(null)}
-                            />
-                            {showTooltip === 'permissions' && (
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-dark-bg border border-white/10 rounded-lg text-xs z-10">
-                                What you can do with the licensed material
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </th>
-                      <th className="py-3 px-4 font-medium text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <span>Conditions</span>
-                          <div className="relative">
-                            <HelpCircle 
-                              size={14} 
-                              className="text-white/50 cursor-help"
-                              onMouseEnter={() => setShowTooltip('conditions')}
-                              onMouseLeave={() => setShowTooltip(null)}
-                            />
-                            {showTooltip === 'conditions' && (
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-dark-bg border border-white/10 rounded-lg text-xs z-10">
-                                Requirements you must adhere to
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </th>
-                      <th className="py-3 px-4 font-medium text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <span>Limitations</span>
-                          <div className="relative">
-                            <HelpCircle 
-                              size={14} 
-                              className="text-white/50 cursor-help"
-                              onMouseEnter={() => setShowTooltip('limitations')}
-                              onMouseLeave={() => setShowTooltip(null)}
-                            />
-                            {showTooltip === 'limitations' && (
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-dark-bg border border-white/10 rounded-lg text-xs z-10">
-                                What you cannot do with the licensed material
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </th>
-                      <th className="py-3 px-4 font-medium text-center">Required for</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {licenses.map((license) => (
-                      <tr 
-                        key={license.id} 
-                        className={`border-b border-white/10 hover:bg-white/5 ${
-                          selectedLicense?.id === license.id ? 'bg-primary/10' : ''
-                        }`}
-                      >
-                        <td 
-                          className={`py-4 px-4 font-medium sticky left-0 bg-dark-bg ${
-                            selectedLicense?.id === license.id ? 'text-primary' : ''
-                          }`}
-                        >
-                          <button
-                            onClick={() => {
-                              setSelectedLicense(license);
-                              setActiveTab('finder');
-                            }}
-                            className="text-left hover:underline flex items-center"
-                          >
-                            {license.name}
-                            {license.popular && (
-                              <span className="ml-2 text-xs bg-white/10 text-white/70 px-1.5 py-0.5 rounded-full">
-                                Popular
-                              </span>
-                            )}
-                          </button>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex flex-wrap justify-center gap-1">
-                            {['Commercial use', 'Modification', 'Distribution', 'Private use', 'Patent use'].map((perm) => (
-                              <span
-                                key={perm}
-                                className={`px-1.5 py-0.5 rounded-full text-xs ${
-                                  license.permissions.includes(perm)
-                                    ? 'bg-green-500/20 text-green-300'
-                                    : 'bg-white/5 text-white/30'
-                                }`}
-                              >
-                                {perm}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex flex-wrap justify-center gap-1">
-                            {['License and copyright notice', 'State changes', 'Disclose source', 'Same license', 'Network use is distribution'].map((cond) => (
-                              <span
-                                key={cond}
-                                className={`px-1.5 py-0.5 rounded-full text-xs ${
-                                  license.conditions.includes(cond)
-                                    ? 'bg-yellow-500/20 text-yellow-300'
-                                    : 'bg-white/5 text-white/30'
-                                }`}
-                              >
-                                {cond.length > 15 ? `${cond.substring(0, 15)}...` : cond}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex flex-wrap justify-center gap-1">
-                            {['Liability', 'Warranty', 'Trademark use'].map((limit) => (
-                              <span
-                                key={limit}
-                                className={`px-1.5 py-0.5 rounded-full text-xs ${
-                                  license.limitations.includes(limit)
-                                    ? 'bg-red-500/20 text-red-300'
-                                    : 'bg-white/5 text-white/30'
-                                }`}
-                              >
-                                {limit}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 text-sm text-center">
-                          {license.id === 'mit' && 'Simple, permissive projects'}
-                          {license.id === 'apache-2.0' && 'Patent protection'}
-                          {license.id === 'gpl-3.0' && 'Strong copyleft protection'}
-                          {license.id === 'bsd-2-clause' && 'Simple, minimal restrictions'}
-                          {license.id === 'bsd-3-clause' && 'No endorsement required'}
-                          {license.id === 'lgpl-3.0' && 'Libraries with code sharing'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                  
+                  <div>
+                    <h3 className="font-bold mb-1">Copyleft Licenses</h3>
+                    <p className="text-white/70">
+                      Require derivative works to use the same license. Ensures software remains free.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-bold mb-1">Not a Lawyer?</h3>
+                    <p className="text-white/70">
+                      This tool is a starting point. For legal advice, consult with a professional.
+                    </p>
+                  </div>
+                </div>
               </div>
-            </motion.div>
-          )}
+            </div>
+            
+            <div className="lg:col-span-2">
+              <div className="glass-card p-6 mb-6">
+                <h2 className="text-xl font-bold mb-4">
+                  Recommended Licenses
+                </h2>
+                
+                <div className="space-y-4">
+                  {filteredLicenses.length === 0 ? (
+                    <div className="bg-white/5 rounded-lg p-4 text-center">
+                      <p>No licenses match your current filters</p>
+                    </div>
+                  ) : (
+                    filteredLicenses.map(license => (
+                      <div
+                        key={license.id}
+                        className={`
+                          border rounded-lg p-4 transition-colors cursor-pointer
+                          ${selectedLicense?.id === license.id 
+                            ? 'border-primary bg-primary/10' 
+                            : 'border-white/10 hover:border-white/30 bg-white/5'}
+                        `}
+                        onClick={() => handleLicenseSelect(license)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-bold text-lg">{license.name}</h3>
+                          <div className="flex items-center">
+                            {[...Array(Math.round(license.popularity / 2))].map((_, i) => (
+                              <Heart
+                                key={i}
+                                size={12}
+                                className="text-neon-purple fill-neon-purple"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <p className="text-sm text-white/70 mb-3">
+                          {license.description}
+                        </p>
+                        
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {getFeaturedTags(license).map((tag, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-white/10 rounded-full text-xs"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-2 text-sm">
+                          <div>
+                            <h4 className="font-bold text-primary mb-1 flex items-center gap-1">
+                              <Check size={12} />
+                              Can
+                            </h4>
+                            <ul className="space-y-1">
+                              {license.permissions.slice(0, 3).map((perm, i) => (
+                                <li key={i} className="text-white/70 flex items-center gap-1">
+                                  <Check size={10} className="text-green-400" />
+                                  {perm}
+                                </li>
+                              ))}
+                              {license.permissions.length > 3 && (
+                                <li className="text-white/50 text-xs">+{license.permissions.length - 3} more</li>
+                              )}
+                            </ul>
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-bold text-neon-purple mb-1 flex items-center gap-1">
+                              <AlertCircle size={12} />
+                              Cannot
+                            </h4>
+                            <ul className="space-y-1">
+                              {license.limitations.slice(0, 3).map((limit, i) => (
+                                <li key={i} className="text-white/70 flex items-center gap-1">
+                                  <AlertCircle size={10} className="text-red-400" />
+                                  {limit}
+                                </li>
+                              ))}
+                              {license.limitations.length > 3 && (
+                                <li className="text-white/50 text-xs">+{license.limitations.length - 3} more</li>
+                              )}
+                            </ul>
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-bold text-neon-blue mb-1 flex items-center gap-1">
+                              <Code size={12} />
+                              Must
+                            </h4>
+                            <ul className="space-y-1">
+                              {license.conditions.slice(0, 3).map((condition, i) => (
+                                <li key={i} className="text-white/70 flex items-center gap-1">
+                                  <Link2 size={10} className="text-blue-400" />
+                                  {condition}
+                                </li>
+                              ))}
+                              {license.conditions.length > 3 && (
+                                <li className="text-white/50 text-xs">+{license.conditions.length - 3} more</li>
+                              )}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+              
+              {selectedLicense && (
+                <div className="glass-card p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                      <FileText className="text-primary" size={20} />
+                      License Preview: {selectedLicense.name}
+                    </h2>
+                    
+                    <div className="flex gap-2">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                navigator.clipboard.writeText(selectedLicense.content);
+                                alert("License copied to clipboard!");
+                              }}
+                            >
+                              Copy
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Copy license text</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                const blob = new Blob([selectedLicense.content], {type: 'text/plain'});
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = 'LICENSE';
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                              }}
+                            >
+                              Download
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Download LICENSE file</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-dark-bg rounded-lg p-4 font-mono text-sm h-[300px] overflow-y-auto">
+                    <pre className="whitespace-pre-wrap">{selectedLicense.content}</pre>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="glass-card p-6 text-center">
+            <h2 className="text-xl font-bold mb-2">Need more guidance?</h2>
+            <p className="text-white/70 mb-4">Check out these resources for more information about open source licenses.</p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <a 
+                href="https://choosealicense.com/" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+              >
+                Choose a License
+              </a>
+              <a 
+                href="https://opensource.org/licenses/" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-ghost"
+              >
+                Open Source Initiative
+              </a>
+            </div>
+          </div>
         </div>
       </main>
       <Footer />
